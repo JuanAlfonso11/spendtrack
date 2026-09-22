@@ -43,6 +43,20 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 - [ ] (Opcional) Importar PDF de estado de cuenta
 - Bloqueo: necesito un ejemplo real (anonimizado) de estado de cuenta y de alerta BPD
 
+### Phase 5: Tarjetas de crédito
+**Status:** complete
+- [x] Tarjetas: límite, día de corte, fecha límite, saldo manual (entra al siguiente corte)
+- [x] Pago para no generar intereses, vencimiento, uso del límite, consumos por mes/categoría
+- [x] Importar estado de tarjeta (signos invertidos: consumo sube la deuda)
+- [x] Pagos de tarjeta excluidos de ingresos/gastos (categorías transfer) para no contar doble
+
+### Phase 6: Invertir el excedente
+**Status:** complete
+- [x] Fondo de emergencia (3/6 meses de gasto promedio) → excedente invertible
+- [x] Aviso en Resumen cuando el excedente pasa el umbral del usuario
+- [x] Simulador de interés compuesto (invertido vs solo guardado, ingreso pasivo)
+- [x] Opciones comunes en RD, solo educativas, con aviso de no-asesoría (sin tasas inventadas)
+
 ### Phase 4: Deploy
 **Status:** pending
 - [ ] Deploy a Vercel, instalar en el celular, prueba real 1 semana

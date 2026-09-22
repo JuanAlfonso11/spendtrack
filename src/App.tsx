@@ -5,25 +5,28 @@ import type { Tx } from './db.ts'
 import TxDialog from './TxDialog.tsx'
 import Dashboard from './screens/Dashboard.tsx'
 import Movements from './screens/Movements.tsx'
+import Cards from './screens/Cards.tsx'
 import Import from './screens/Import.tsx'
-import Goals from './screens/Goals.tsx'
+import Savings from './screens/Savings.tsx'
 import Settings from './screens/Settings.tsx'
 
-type Route = 'resumen' | 'movimientos' | 'importar' | 'metas' | 'ajustes'
-const NAV: { id: Route; label: string; icon: IconName }[] = [
+export type Route = 'resumen' | 'movimientos' | 'tarjetas' | 'ahorro' | 'importar' | 'ajustes'
+const NAV: { id: Route; label: string; icon: IconName; desktopOnly?: boolean }[] = [
   { id: 'resumen', label: 'Resumen', icon: 'home' },
   { id: 'movimientos', label: 'Movimientos', icon: 'list' },
+  { id: 'tarjetas', label: 'Tarjetas', icon: 'card' },
+  { id: 'ahorro', label: 'Ahorro', icon: 'target' },
   { id: 'importar', label: 'Importar', icon: 'upload' },
-  { id: 'metas', label: 'Metas', icon: 'target' },
-  { id: 'ajustes', label: 'Ajustes', icon: 'settings' },
+  { id: 'ajustes', label: 'Ajustes', icon: 'settings', desktopOnly: true },
 ]
 
 type Ctx = {
   month: string
   setMonth: (m: string) => void
-  go: (r: Route, category?: string) => void
-  category: string | null
-  setCategory: (c: string | null) => void
+  // `sub` es la subsección: la categoría en movimientos, la tarjeta en importar, la pestaña en ahorro.
+  go: (r: Route, sub?: string | number) => void
+  sub: string | null
+  setSub: (s: string | null) => void
   edit: (tx?: Partial<Tx>) => void
   toast: (msg: string) => void
   colors: ChartColors
@@ -32,21 +35,20 @@ type Ctx = {
 const AppCtx = createContext<Ctx>(null!)
 export const useApp = () => useContext(AppCtx)
 
-const routeFromHash = (): Route => {
-  const r = location.hash.replace('#/', '') as Route
-  return NAV.some((n) => n.id === r) ? r : 'resumen'
+const parseHash = (): [Route, string | null] => {
+  const [r, sub] = location.hash.replace('#/', '').split('/') as [Route, string?]
+  return NAV.some((n) => n.id === r) ? [r, sub ? decodeURIComponent(sub) : null] : ['resumen', null]
 }
 
 export default function App() {
   const theme = useTheme()
-  const [route, setRoute] = useState<Route>(routeFromHash)
+  const [[route, sub], setLoc] = useState(parseHash)
   const [month, setMonth] = useState(monthOf(today()))
-  const [category, setCategory] = useState<string | null>(null)
   const [editing, setEditing] = useState<Partial<Tx> | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
 
   useEffect(() => {
-    const on = () => setRoute(routeFromHash())
+    const on = () => setLoc(parseHash())
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
@@ -56,14 +58,15 @@ export default function App() {
     return () => clearTimeout(t)
   }, [msg])
 
+  const go = (r: Route, s?: string | number) => { location.hash = `/${r}${s != null ? '/' + encodeURIComponent(s) : ''}`; scrollTo(0, 0) }
   const ctx: Ctx = {
-    month, setMonth, category, setCategory, theme,
+    month, setMonth, sub, theme, go,
+    setSub: (s) => go(route, s ?? undefined),
     colors: CHART[theme.resolved],
-    go: (r, c) => { setCategory(c ?? null); location.hash = `/${r}`; scrollTo(0, 0) },
     edit: (tx) => setEditing(tx ?? {}),
     toast: setMsg,
   }
-  const Screen = { resumen: Dashboard, movimientos: Movements, importar: Import, metas: Goals, ajustes: Settings }[route]
+  const Screen = { resumen: Dashboard, movimientos: Movements, tarjetas: Cards, ahorro: Savings, importar: Import, ajustes: Settings }[route]
 
   return (
     <AppCtx.Provider value={ctx}>
@@ -71,12 +74,12 @@ export default function App() {
         <nav className="nav" aria-label="Principal">
           <div className="brand"><img src="/icon.svg" alt="" />SpendTrack</div>
           {NAV.map((n) => (
-            <a key={n.id} href={`#/${n.id}`} aria-current={route === n.id ? 'page' : undefined} onClick={() => setCategory(null)}>
+            <a key={n.id} href={`#/${n.id}`} className={n.desktopOnly ? 'desktop-only' : undefined} aria-current={route === n.id ? 'page' : undefined}>
               <Icon name={n.icon} />{n.label}
             </a>
           ))}
         </nav>
-        <main className="main"><Screen /></main>
+        <main className="main"><Screen key={route} /></main>
         {(route === 'resumen' || route === 'movimientos') && (
           <button className="fab" aria-label="Agregar movimiento" onClick={() => setEditing({})}><Icon name="plus" /></button>
         )}
@@ -95,4 +98,9 @@ export function ThemeButton() {
       <Icon name={dark ? 'sun' : 'moon'} />
     </button>
   )
+}
+
+// En el celular, Ajustes se abre desde este botón (la barra inferior tiene 5 secciones).
+export function SettingsButton() {
+  return <a className="btn icon-btn mobile-only" href="#/ajustes" aria-label="Ajustes"><Icon name="settings" /></a>
 }

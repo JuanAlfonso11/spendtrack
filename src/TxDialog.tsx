@@ -16,6 +16,8 @@ export default function TxDialog({ initial, onClose }: { initial: Partial<Tx>; o
   const [date, setDate] = useState(initial.date ?? today())
   const [category, setCategory] = useState(initial.category ?? '')
   const [touched, setTouched] = useState(Boolean(initial.category))
+  const [account, setAccount] = useState(initial.account != null ? String(initial.account) : '')
+  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? []
 
   const rules = useLiveQuery(() => db.rules.toArray(), []) ?? []
   const past = useLiveQuery(() => db.txs.orderBy('date').reverse().limit(400).toArray(), []) ?? []
@@ -36,7 +38,7 @@ export default function TxDialog({ initial, onClose }: { initial: Partial<Tx>; o
     e.preventDefault()
     const value = parseFloat(amount.replace(/,/g, ''))
     if (!(value > 0)) return toast('Escribe un monto mayor que cero')
-    const tx: Tx = { date, amount: value, type, category: category || guess, description: description.trim() || 'Sin descripción', source: initial.source ?? 'manual' }
+    const tx: Tx = { date, amount: value, type, category: category || guess, description: description.trim() || 'Sin descripción', source: initial.source ?? 'manual', account: account ? +account : undefined }
     if (initial.id) await db.txs.update(initial.id, tx)
     else await db.txs.add(tx)
     if (description.trim() && tx.category !== categorize(description, type, [])) await learnRule(description, tx.category)
@@ -84,6 +86,14 @@ export default function TxDialog({ initial, onClose }: { initial: Partial<Tx>; o
             <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </label>
         </div>
+        {cards.length > 0 && (
+          <label className="field">{type === 'gasto' ? 'Pagado con' : 'Entró a'}
+            <select className="input" value={account} onChange={(e) => setAccount(e.target.value)}>
+              <option value="">Cuenta bancaria</option>
+              {cards.map((c) => <option key={c.id} value={c.id}>{c.name} ···{c.last4}</option>)}
+            </select>
+          </label>
+        )}
         <div className="row">
           {initial.id && <button type="button" className="btn danger" onClick={remove}>Eliminar</button>}
           <button className="btn primary">{initial.id ? 'Guardar cambios' : 'Guardar'}</button>

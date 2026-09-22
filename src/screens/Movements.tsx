@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../db.ts'
+import { db, type Card } from '../db.ts'
 import { categoryById } from '../categories.ts'
 import { normalize } from '../parse.ts'
 import { dayLabel, fmt } from '../lib.ts'
@@ -8,14 +8,18 @@ import { useApp } from '../App.tsx'
 import { MonthSwitch } from './Dashboard.tsx'
 
 export default function Movements() {
-  const { month, category, setCategory, edit, go } = useApp()
+  const { month, sub: category, setSub: setCategory, edit, go } = useApp()
   const [q, setQ] = useState('')
+  const [account, setAccount] = useState('todas')
+  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? []
+  const cardName = (id?: number) => { const c = cards.find((c: Card) => c.id === id); return c ? `${c.name} ···${c.last4}` : '' }
   const [type, setType] = useState<'todos' | 'gasto' | 'ingreso'>('todos')
   const txs = useLiveQuery(() => db.txs.where('date').between(month + '-01', month + '-31', true, true).reverse().sortBy('date'), [month]) ?? []
 
   const presentCats = useMemo(() => [...new Set(txs.map((t) => t.category))], [txs])
   const list = txs.filter((t) =>
     (type === 'todos' || t.type === type) &&
+    (account === 'todas' || (account === 'cuenta' ? t.account == null : t.account === +account)) &&
     (!category || t.category === category) &&
     (!q || normalize(t.description).includes(normalize(q))))
   const days = useMemo(() => {
@@ -35,6 +39,13 @@ export default function Movements() {
       <div className="grid" style={{ gap: 10 }}>
         <div className="row" style={{ flexWrap: 'wrap' }}>
           <input className="input" type="search" placeholder="Buscar por descripción" value={q} onChange={(e) => setQ(e.target.value)} style={{ flex: '1 1 220px' }} aria-label="Buscar" />
+          {cards.length > 0 && (
+            <select className="input" style={{ flex: '0 1 200px' }} value={account} onChange={(e) => setAccount(e.target.value)} aria-label="Cuenta">
+              <option value="todas">Todas las cuentas</option>
+              <option value="cuenta">Cuenta bancaria</option>
+              {cards.map((c) => <option key={c.id} value={c.id}>{c.name} ···{c.last4}</option>)}
+            </select>
+          )}
           <div className="segmented" role="group" aria-label="Tipo" style={{ flex: 'none' }}>
             {(['todos', 'gasto', 'ingreso'] as const).map((t) => (
               <button key={t} aria-pressed={type === t} onClick={() => setType(t)}>{t === 'todos' ? 'Todos' : t === 'gasto' ? 'Gastos' : 'Ingresos'}</button>
@@ -69,7 +80,7 @@ export default function Movements() {
             <button key={t.id} className="tx" onClick={() => edit(t)}>
               <span className="desc">{t.description}</span>
               <span className={`amt ${t.type === 'ingreso' ? 'income' : ''}`}>{t.type === 'ingreso' ? '+' : '−'}{fmt(t.amount)}</span>
-              <span className="cat">{categoryById(t.category).label}{t.source === 'import' ? ' · importado' : ''}</span>
+              <span className="cat">{categoryById(t.category).label}{t.account != null ? ` · ${cardName(t.account)}` : ''}{t.source === 'import' ? ' · importado' : ''}</span>
             </button>
           ))}
         </section>

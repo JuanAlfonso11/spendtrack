@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Goal } from '../db.ts'
 import { fmt, monthOf, shiftMonth, today } from '../lib.ts'
-import { ThemeButton, useApp } from '../App.tsx'
+import { useApp } from '../App.tsx'
+import { isTransfer } from '../categories.ts'
 import { Icon } from '../icons.tsx'
 
 const weeksUntil = (date: string) => Math.max(0, (new Date(date + 'T12:00').getTime() - Date.now()) / (7 * 86400000))
@@ -14,19 +15,18 @@ export default function Goals() {
   const avgSaving = useLiveQuery(async () => {
     const end = shiftMonth(monthOf(today()), -1)
     const txs = await db.txs.where('date').between(shiftMonth(end, -2) + '-01', end + '-31', true, true).toArray()
-    return txs.reduce((s, t) => s + (t.type === 'ingreso' ? t.amount : -t.amount), 0) / 3
+    return txs.filter((t) => !isTransfer(t.category)).reduce((s, t) => s + (t.type === 'ingreso' ? t.amount : -t.amount), 0) / 3
   }, []) ?? 0
 
   if (!goals) return null
   return (
     <>
-      <header className="topbar">
-        <div><p className="eyebrow">Metas</p><h1>Metas de ahorro</h1></div>
-        <div className="row" style={{ flex: 'none' }}>
+      {goals.length > 0 && (
+        <div className="spread" style={{ marginBottom: 14 }}>
+          <p className="muted" style={{ margin: 0 }}>Llevas <strong className="num">{fmt(goals.reduce((s, g) => s + g.saved, 0))}</strong> ahorrado en {goals.length} {goals.length === 1 ? 'meta' : 'metas'}.</p>
           <button className="btn primary" onClick={() => setEditing({})}><Icon name="plus" />Nueva meta</button>
-          <ThemeButton />
         </div>
-      </header>
+      )}
 
       {goals.length === 0 ? (
         <div className="card empty">

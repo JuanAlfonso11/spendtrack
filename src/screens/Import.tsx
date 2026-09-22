@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { CATEGORIES } from '../categories.ts'
 import { db, learnRule, type Tx } from '../db.ts'
 import { categorize, dedupeKey, linesToDrafts, merchantKey, parseCSV, rowsToDrafts, textToDrafts, type Draft } from '../parse.ts'
@@ -39,25 +40,30 @@ async function readPdf(file: File): Promise<string[]> {
   return lines
 }
 
-async function readFile(file: File, rules: { match: string; category: string }[]): Promise<Draft[]> {
+async function readFile(file: File, rules: { match: string; category: string }[], card: boolean): Promise<Draft[]> {
   const name = file.name.toLowerCase()
-  if (name.endsWith('.pdf')) return linesToDrafts(await readPdf(file), rules)
+  if (name.endsWith('.pdf')) return linesToDrafts(await readPdf(file), rules, card)
   if (/\.(xlsx|xls|ods)$/.test(name)) {
     const XLSX = await import('xlsx')
     const wb = XLSX.read(await file.arrayBuffer())
     for (const sheet of wb.SheetNames) {
       const rows = XLSX.utils.sheet_to_json<(string | number)[]>(wb.Sheets[sheet], { header: 1, raw: true, defval: '' })
-      const drafts = rowsToDrafts(rows, rules)
+      const drafts = rowsToDrafts(rows, rules, card)
       if (drafts.length) return drafts
     }
     return []
   }
   const text = await file.text()
-  return name.endsWith('.csv') ? rowsToDrafts(parseCSV(text), rules) : textToDrafts(text, rules)
+  return name.endsWith('.csv') ? rowsToDrafts(parseCSV(text), rules, card) : textToDrafts(text, rules, card)
 }
 
 export default function Import() {
-  const { toast, go, setMonth } = useApp()
+  const { toast, go, setMonth, sub } = useApp()
+  const cards = useLiveQuery(() => db.cards.toArray(), []) ?? []
+  // '' = cuenta bancaria; si no, el id de la tarjeta.
+  const [account, setAccount] = useState(sub ?? '')
+  const isCard = account !== ''
+  const accountName = isCard ? (cards.find((c) => String(c.id) === account)?.name ?? 'Tarjeta') : 'Cuenta bancaria'
   const input = useRef<HTMLInputElement>(null)
   const [rows, setRows] = useState<Row[] | null>(null)
   const [source, setSource] = useState('')
@@ -76,7 +82,8 @@ export default function Import() {
         return
       }
       const dates = drafts.map((d) => d.date).sort()
-      const existing = new Set((await db.txs.where('date').between(dates[0], dates.at(-1)!, true, true).toArray()).map(dedupeKey))
+      const existing = new Set((await db.txs.where('date').between(dates[0], dates.at(-1)!, true, true).toArray())
+        .filter((t) => (t.account ?? '') === (isCard ? +account : '')).map(dedupeKey))
       const seen = new Set<string>()
       setRows(drafts.map((d, key) => {
         const k = dedupeKey(d)
@@ -90,7 +97,7 @@ export default function Import() {
     } finally { setBusy(false) }
   }
 
-  const onFile = (file?: File) => file && load((r) => readFile(file, r), file.name)
+  const onFile = (file?: File) => file && load((r) => readFile(file, r, isCard), file.name)
   const patch = (key: number, p: Partial<Row>) => setRows((rs) => rs!.map((r) => (r.key === key ? { ...r, ...p } : r)))
 
   // Al cambiar la categoría de un comercio, se aplica a los demás movimientos del mismo comercio.
@@ -105,13 +112,13 @@ export default function Import() {
 
   async function save() {
     const chosen = rows!.filter((r) => r.on)
-    const txs: Tx[] = chosen.map(({ date, description, amount, type, category }) => ({ date, description, amount, type, category, source: 'import' }))
+    const txs: Tx[] = chosen.map(({ date, description, amount, type, category }) => ({ date, description, amount, type, category, source: 'import', account: isCard ? +account : undefined }))
     await db.txs.bulkAdd(txs)
     for (const r of chosen.filter((r) => r.touched)) await learnRule(r.description, r.category)
     toast(`${txs.length} movimientos importados`)
     setMonth(chosen.map((r) => r.date).sort().at(-1)!.slice(0, 7))
     setRows(null); setText('')
-    go('resumen')
+    go(isCard ? 'tarjetas' : 'resumen', isCard ? account : undefined)
   }
 
   if (rows) {
@@ -122,12 +129,12 @@ export default function Import() {
     return (
       <>
         <header className="topbar">
-          <div><p className="eyebrow">Revisar importación · {source}</p><h1>{rows.length} movimientos encontrados</h1></div>
+          <div><p className="eyebrow">Revisar importación · {accountName} · {source}</p><h1>{rows.length} movimientos encontrados</h1></div>
         </header>
         <div className="kpis" style={{ marginBottom: 14 }}>
           <div className="kpi"><div className="label">Seleccionados</div><div className="value">{on.length}</div></div>
-          <div className="kpi"><div className="label">Ingresos</div><div className="value income">{fmt(inc)}</div></div>
-          <div className="kpi"><div className="label">Gastos</div><div className="value">{fmt(exp)}</div></div>
+          <div className="kpi"><div className="label">{isCard ? 'Pagos y abonos' : 'Ingresos'}</div><div className="value income">{fmt(inc)}</div></div>
+          <div className="kpi"><div className="label">{isCard ? 'Consumos' : 'Gastos'}</div><div className="value">{fmt(exp)}</div></div>
           <div className="kpi"><div className="label">Duplicados</div><div className="value">{dups}</div><div className="delta">{dups ? 'Ya estaban guardados; desmarcados' : 'Ninguno'}</div></div>
         </div>
         <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
@@ -172,6 +179,14 @@ export default function Import() {
       </header>
       <div className="grid grid-2">
         <div className="grid">
+          <section className="card">
+            <div className="card-head"><div><h2>¿De dónde es este estado de cuenta?</h2><p>{isCard ? 'En la tarjeta, los consumos suben la deuda y los pagos la bajan.' : 'Cuenta de ahorro o corriente.'}</p></div></div>
+            <div className="chips" role="group" aria-label="Cuenta">
+              <button className="chip" aria-pressed={!isCard} onClick={() => setAccount('')}>Cuenta bancaria</button>
+              {cards.map((c) => <button key={c.id} className="chip" aria-pressed={account === String(c.id)} onClick={() => setAccount(String(c.id))}>{c.name} ···{c.last4}</button>)}
+              <button className="chip" onClick={() => go('tarjetas')}>+ Agregar tarjeta</button>
+            </div>
+          </section>
           <label
             className={`drop ${over ? 'over' : ''}`}
             onDragOver={(e) => { e.preventDefault(); setOver(true) }}
@@ -190,7 +205,7 @@ export default function Import() {
             <textarea className="input" value={text} onChange={(e) => setText(e.target.value)}
               placeholder={'22/09/2026  SUPERMERCADOS NACIONAL  2,350.00  18,420.55\n\nConsumo por RD$1,250.00 en STARBUCKS con su tarjeta ***1234 el 21/09/2026'} />
             <div className="row" style={{ marginTop: 10, justifyContent: 'flex-end' }}>
-              <button className="btn primary" style={{ flex: 'none' }} disabled={!text.trim() || busy} onClick={() => load(async (r) => textToDrafts(text, r), 'texto pegado')}>Leer movimientos</button>
+              <button className="btn primary" style={{ flex: 'none' }} disabled={!text.trim() || busy} onClick={() => load(async (r) => textToDrafts(text, r, isCard), 'texto pegado')}>Leer movimientos</button>
             </div>
           </section>
         </div>

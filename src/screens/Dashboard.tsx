@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { db } from '../db.ts'
-import { categoryById } from '../categories.ts'
+import { db, getSettings } from '../db.ts'
+import { categoryById, isTransfer } from '../categories.ts'
+import { avgMonthlyExpense, cardStatus, investReadiness } from '../finance.ts'
 import { merchantKey } from '../parse.ts'
 import { daysInMonth, fmt, fmtShort, monthLabel, monthOf, shiftMonth, today } from '../lib.ts'
-import { ThemeButton, useApp } from '../App.tsx'
+import { SettingsButton, ThemeButton, useApp } from '../App.tsx'
 import { Icon } from '../icons.tsx'
 import { loadSample } from '../sample.ts'
 
@@ -27,11 +28,25 @@ export default function Dashboard() {
   const current = monthOf(today())
   const anchor = month >= shiftMonth(current, -5) ? current : shiftMonth(month, 5)
   const from = shiftMonth(anchor, -6) + '-01'
-  const txs = useLiveQuery(() => db.txs.where('date').between(from, anchor + '-31', true, true).toArray(), [from, anchor])
+  const rawTxs = useLiveQuery(() => db.txs.where('date').between(from, anchor + '-31', true, true).toArray(), [from, anchor])
   const goals = useLiveQuery(() => db.goals.toArray(), []) ?? []
+  // Avisos: tarjetas por pagar y dinero listo para invertir.
+  const alerts = useLiveQuery(async () => {
+    const now = today()
+    const cards = await db.cards.toArray()
+    const cardTxs = cards.length ? await db.txs.where('account').above(0).toArray() : []
+    const cardList = cards.map((c) => ({ card: c, s: cardStatus(c, cardTxs, now) }))
+    const settings = await getSettings()
+    const start = shiftMonth(monthOf(now), -3) + '-01'
+    const recent = await db.txs.where('date').aboveOrEqual(start).toArray()
+    const saved = settings.savings ?? (await db.goals.toArray()).reduce((s, g) => s + g.saved, 0)
+    return { cardList, invest: investReadiness(saved, avgMonthlyExpense(recent, now), settings.emergencyMonths, settings.investThreshold) }
+  }, [])
 
   const d = useMemo(() => {
-    if (!txs) return null
+    if (!rawTxs) return null
+    // Los pagos de tarjeta no cuentan: el gasto ya se registró en cada consumo.
+    const txs = rawTxs.filter((t) => !isTransfer(t.category))
     const months = Array.from({ length: 7 }, (_, i) => shiftMonth(anchor, i - 6))
     const all = months.map((m) => {
       const list = txs.filter((t) => monthOf(t.date) === m)
@@ -68,7 +83,7 @@ export default function Dashboard() {
       return { day: i + 1, actual: i < lastDay ? a : null, anterior: i < daysInMonth(prevMonth) ? b : null }
     })
     return { monthly, cur, prev, cats, merchants, pace, lastDay }
-  }, [txs, month, anchor])
+  }, [rawTxs, month, anchor])
 
   if (!d) return null
   const { cur, prev } = d
@@ -82,7 +97,7 @@ export default function Dashboard() {
     <>
       <header className="topbar">
         <div><p className="eyebrow">Resumen</p><h1>{monthLabel(month)}</h1></div>
-        <div className="row" style={{ flex: 'none' }}><MonthSwitch compact /><ThemeButton /></div>
+        <div className="row" style={{ flex: 'none' }}><MonthSwitch compact /><ThemeButton /><SettingsButton /></div>
       </header>
 
       {empty ? (
@@ -97,6 +112,12 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid">
+          {alerts?.invest.ready && (
+            <button className="notice" style={{ textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit' }} onClick={() => go('ahorro', 'invertir')}>
+              <h3>Tienes {fmt(alerts.invest.investable)} que podrías poner a producir</h3>
+              <p>Tu fondo de emergencia está cubierto. Mira opciones y simula cuánto podría generar →</p>
+            </button>
+          )}
           <section className="kpis" aria-label="Totales del mes">
             <div className="kpi"><div className="label"><span className="swatch" style={{ background: c.income }} />Ingresos</div><div className="value">{fmt(cur.ingresos)}</div><div className="delta">{change(cur.ingresos, prev.ingresos)}</div></div>
             <div className="kpi"><div className="label"><span className="swatch" style={{ background: c.expense }} />Gastos</div><div className="value">{fmt(cur.gastos)}</div><div className="delta">{change(cur.gastos, prev.gastos)}</div></div>
@@ -180,9 +201,26 @@ export default function Dashboard() {
             </section>
           </div>
 
+          {alerts && alerts.cardList.length > 0 && (
+            <section className="card">
+              <div className="card-head"><div><h2>Tarjetas de crédito</h2><p>Lo que debes pagar para no generar intereses.</p></div><button className="btn ghost" onClick={() => go('tarjetas')}>Ver tarjetas</button></div>
+              <div className="grid grid-2-even">
+                {alerts.cardList.map(({ card, s }) => (
+                  <button key={card.id} className="catbar" onClick={() => go('tarjetas', card.id)}>
+                    <span className="name">{card.name} ···{card.last4}</span>
+                    <span className="amt">{fmt(s.toPay)}</span>
+                    <span className="track"><span className={`fill${s.utilization >= 0.7 ? ' over' : ''}`} style={{ width: `${Math.min(100, Math.max(0, s.utilization * 100))}%`, display: 'block' }} /></span>
+                    <span className="pct">{Math.round(s.utilization * 100)}% del límite usado</span>
+                    <span className={`pct ${s.overdue ? 'expense' : ''}`}>{s.toPay === 0 ? 'Al día' : s.overdue ? 'Vencido' : `Vence en ${s.daysToDue} ${s.daysToDue === 1 ? 'día' : 'días'}`}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {goals.length > 0 && (
             <section className="card">
-              <div className="card-head"><div><h2>Metas de ahorro</h2></div><button className="btn ghost" onClick={() => go('metas')}>Ver todas</button></div>
+              <div className="card-head"><div><h2>Metas de ahorro</h2></div><button className="btn ghost" onClick={() => go('ahorro')}>Ver todas</button></div>
               <div className="grid grid-2-even">
                 {goals.slice(0, 4).map((g) => (
                   <div key={g.id} className="goal">

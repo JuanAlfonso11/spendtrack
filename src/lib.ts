@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 
 const money = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 2 })
-const moneyShort = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', notation: 'compact', maximumFractionDigits: 1 })
 export const fmt = (n: number) => money.format(n)
-export const fmtShort = (n: number) => moneyShort.format(n)
+// Para ejes de gráficos: RD$12k, RD$1.5M (el formato compacto de es-DO mezcla "K" y "k").
+export const fmtShort = (n: number) =>
+  (n < 0 ? '−' : '') + 'RD$' + (Math.abs(n) >= 1e6 ? `${+(Math.abs(n) / 1e6).toFixed(1)}M` : Math.abs(n) >= 1e3 ? `${+(Math.abs(n) / 1e3).toFixed(1)}k` : `${Math.round(Math.abs(n))}`)
 
 export const today = () => new Date().toLocaleDateString('en-CA') // aaaa-mm-dd local
 export const monthOf = (date: string) => date.slice(0, 7)

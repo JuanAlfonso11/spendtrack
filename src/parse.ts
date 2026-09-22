@@ -57,13 +57,16 @@ export function parseAmount(raw: string | number): number | null {
   return Number.isFinite(n) ? (neg ? -n : n) : null
 }
 
-const guessType = (desc: string): TxType => {
+// En la cuenta, un "PAGO TARJETA" es salida de dinero; en la tarjeta, cualquier "PAGO" es abono.
+const guessType = (desc: string, card: boolean): TxType => {
   const t = normalize(desc)
+  if (/\bPAGO\b/.test(t)) return card ? 'ingreso' : /PAGO (DE |A )?(TARJETA|TC)\b/.test(t) ? 'gasto' : INCOME_HINTS.some((h) => t.includes(h)) ? 'ingreso' : 'gasto'
   return INCOME_HINTS.some((h) => t.includes(h)) ? 'ingreso' : 'gasto'
 }
 
-const draft = (date: string, description: string, signed: number, rules: Rule[], type?: TxType): Draft => {
-  const t = type ?? (signed < 0 ? 'gasto' : guessType(description))
+// En la cuenta un monto negativo es salida; en la tarjeta es un abono (pago o devolución).
+const draft = (date: string, description: string, signed: number, rules: Rule[], type?: TxType, card = false): Draft => {
+  const t = type ?? (signed < 0 ? (card ? 'ingreso' : 'gasto') : guessType(description, card))
   return { date, description: description.replace(/\s+/g, ' ').trim(), amount: Math.abs(signed), type: t, category: categorize(description, t, rules) }
 }
 
@@ -78,12 +81,12 @@ const COLS = {
   ref: /REFERENCIA|REF/,
 }
 
-export function rowsToDrafts(rows: (string | number)[][], rules: Rule[] = []): Draft[] {
+export function rowsToDrafts(rows: (string | number)[][], rules: Rule[] = [], card = false): Draft[] {
   const headerIdx = rows.findIndex((r) => {
     const cells = r.map((c) => normalize(String(c)))
     return cells.some((c) => COLS.date.test(c)) && cells.some((c) => COLS.amount.test(c) || COLS.debit.test(c) || COLS.credit.test(c))
   })
-  if (headerIdx === -1) return linesToDrafts(rows.map((r) => r.join('  ')), rules)
+  if (headerIdx === -1) return linesToDrafts(rows.map((r) => r.join('  ')), rules, card)
 
   const head = rows[headerIdx].map((c) => normalize(String(c)))
   const find = (re: RegExp, not?: RegExp) => head.findIndex((h) => re.test(h) && !(not && not.test(h)))
@@ -106,7 +109,7 @@ export function rowsToDrafts(rows: (string | number)[][], rules: Rule[] = []): D
     else if (credit) out.push(draft(date, desc, Math.abs(credit), rules, 'ingreso'))
     else if (c.amount >= 0) {
       const a = parseAmount(r[c.amount] as string)
-      if (a) out.push(draft(date, desc, a, rules, a < 0 ? 'gasto' : undefined))
+      if (a) out.push(draft(date, desc, a, rules, undefined, card))
     }
   }
   return out
@@ -126,7 +129,7 @@ function cellDate(v: unknown): string | null {
 
 const DATE_PREFIX = /^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}(?:[-/.]\d{2,4})?|\d{1,2}[\s\-/.]*[A-Za-z]{3}[A-Za-z]*\.?(?:[\s\-/.]*\d{4}|[\s\-/.]*\d{2}(?!\d))?)\s*/
 
-export function linesToDrafts(lines: string[], rules: Rule[] = []): Draft[] {
+export function linesToDrafts(lines: string[], rules: Rule[] = [], card = false): Draft[] {
   const out: Draft[] = []
   let prevBalance: number | null = null
   for (const raw of lines) {
@@ -142,14 +145,14 @@ export function linesToDrafts(lines: string[], rules: Rule[] = []): Draft[] {
     const first = parseAmount(amounts[0].text)!
     let type: TxType | undefined
     if (amounts.length >= 2) {
-      // Última cifra = balance. Si subió, fue ingreso; si bajó, gasto.
+      // Última cifra = balance. En la cuenta, si subió fue ingreso; en la tarjeta (deuda), si subió fue consumo.
       const balance = parseAmount(amounts[amounts.length - 1].text)!
       if (prevBalance != null && Math.abs(Math.abs(balance - prevBalance) - Math.abs(first)) < 0.01)
-        type = balance > prevBalance ? 'ingreso' : 'gasto'
+        type = (balance > prevBalance) !== card ? 'ingreso' : 'gasto'
       prevBalance = balance
     }
     if (first === 0) continue
-    out.push(draft(date, description, first, rules, type ?? (first < 0 ? 'gasto' : undefined)))
+    out.push(draft(date, description, first, rules, type, card))
   }
   return out
 }
@@ -169,8 +172,8 @@ export function alertToDraft(text: string, rules: Rule[] = []): Draft | null {
   )
 }
 
-export function textToDrafts(text: string, rules: Rule[] = []): Draft[] {
-  const fromLines = linesToDrafts(text.split(/\r?\n/), rules)
+export function textToDrafts(text: string, rules: Rule[] = [], card = false): Draft[] {
+  const fromLines = linesToDrafts(text.split(/\r?\n/), rules, card)
   if (fromLines.length) return fromLines
   return text.split(/\n\s*\n/).map((b) => alertToDraft(b, rules)).filter((d): d is Draft => d !== null)
 }

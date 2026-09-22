@@ -13,8 +13,8 @@ export default function Settings() {
     try { await importBackup(file); toast('Respaldo restaurado') } catch (e) { toast((e as Error).message) }
   }
   async function wipe() {
-    if (!confirm('¿Borrar todos los movimientos, metas y reglas? No se puede deshacer.')) return
-    await Promise.all([db.txs.clear(), db.goals.clear(), db.rules.clear()])
+    if (!confirm('¿Borrar todos los movimientos, tarjetas, metas y reglas? No se puede deshacer.')) return
+    await Promise.all([db.txs.clear(), db.goals.clear(), db.rules.clear(), db.cards.clear(), db.settings.clear()])
     toast('Datos borrados')
   }
 

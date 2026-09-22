@@ -1,6 +1,6 @@
 export type TxType = 'ingreso' | 'gasto'
 
-export type Category = { id: string; label: string; type: TxType; keywords: string[] }
+export type Category = { id: string; label: string; type: TxType; keywords: string[]; transfer?: boolean }
 
 // Palabras clave en mayúsculas sin acentos; se comparan como palabra completa.
 export const CATEGORIES: Category[] = [
@@ -15,15 +15,20 @@ export const CATEGORIES: Category[] = [
   { id: 'educacion', label: 'Educación', type: 'gasto', keywords: ['UNIVERSIDAD', 'COLEGIO', 'PUCMM', 'INTEC', 'UNAPEC', 'UASD', 'UNIBE', 'UDEMY', 'COURSERA', 'PLATZI', 'LIBRERIA'] },
   { id: 'efectivo', label: 'Retiros de efectivo', type: 'gasto', keywords: ['RETIRO', 'CAJERO', 'ATM', 'AVANCE EFECTIVO'] },
   { id: 'banco', label: 'Comisiones e impuestos', type: 'gasto', keywords: ['COMISION', 'CARGO POR', 'CARGO MANEJO', 'IMPUESTO', 'DGII', 'ITBIS', 'MEMBRESIA', 'INTERES FINANCIAMIENTO', 'MORA'] },
-  { id: 'transfer_out', label: 'Transferencias enviadas', type: 'gasto', keywords: ['TRANSF', 'TRANSFERENCIA', 'ACH', 'LBTR', 'PAGO TARJETA', 'PAGO PRESTAMO'] },
+  // Pagar la tarjeta no es un gasto nuevo: el gasto ya se contó en cada consumo.
+  { id: 'pago_tarjeta', label: 'Pago de tarjeta', type: 'gasto', transfer: true, keywords: ['PAGO TARJETA', 'PAGO TC', 'PAGO A TARJETA', 'PAGO DE TARJETA', 'PAGO TARJETA CREDITO'] },
+  { id: 'transfer_out', label: 'Transferencias enviadas', type: 'gasto', keywords: ['TRANSF', 'TRANSFERENCIA', 'ACH', 'LBTR', 'PAGO PRESTAMO'] },
   { id: 'otros_gasto', label: 'Otros gastos', type: 'gasto', keywords: [] },
+  { id: 'pago_recibido', label: 'Pago a la tarjeta', type: 'ingreso', transfer: true, keywords: ['SU PAGO', 'PAGO RECIBIDO', 'PAGO GRACIAS', 'GRACIAS POR SU PAGO', 'PAGO TARJETA'] },
   { id: 'salario', label: 'Salario', type: 'ingreso', keywords: ['NOMINA', 'SALARIO', 'SUELDO', 'PAYROLL', 'QUINCENA', 'REGALIA'] },
   { id: 'transfer_in', label: 'Transferencias recibidas', type: 'ingreso', keywords: ['TRANSF', 'TRANSFERENCIA', 'ACH', 'LBTR', 'DEPOSITO'] },
   { id: 'otros_ingreso', label: 'Otros ingresos', type: 'ingreso', keywords: ['INTERES GANADO', 'INTERESES', 'DEVOLUCION', 'REEMBOLSO', 'CASHBACK', 'DIVIDENDO'] },
 ]
 
 export const categoryById = (id: string) => CATEGORIES.find((c) => c.id === id) ?? CATEGORIES.find((c) => c.id === 'otros_gasto')!
+// Movimientos entre tu cuenta y tu tarjeta: no cuentan como ingreso ni gasto.
+export const isTransfer = (id: string) => Boolean(CATEGORIES.find((c) => c.id === id)?.transfer)
 export const fallbackCategory = (type: TxType) => (type === 'ingreso' ? 'otros_ingreso' : 'otros_gasto')
 
 // Palabras que indican que un movimiento sin signo claro es un ingreso.
-export const INCOME_HINTS = ['NOMINA', 'SALARIO', 'SUELDO', 'DEPOSITO', 'CREDITO', 'ABONO', 'RECIBID', 'INTERES GANADO', 'DEVOLUCION', 'REEMBOLSO', 'REVERSO']
+export const INCOME_HINTS = ['NOMINA', 'SALARIO', 'SUELDO', 'DEPOSITO', 'CREDITO', 'ABONO', 'RECIBID', 'INTERES GANADO', 'DEVOLUCION', 'REEMBOLSO', 'REVERSO', 'SU PAGO', 'PAGO RECIBIDO', 'PAGO GRACIAS']
