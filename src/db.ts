@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import { Capacitor } from '@capacitor/core'
 import type { TxType } from './categories.ts'
 import { merchantKey, type Rule } from './parse.ts'
 
@@ -51,8 +52,17 @@ export async function learnRule(description: string, category: string) {
 
 export async function exportBackup() {
   const data = { version: 1, exportedAt: new Date().toISOString(), txs: await db.txs.toArray(), goals: await db.goals.toArray(), rules: await db.rules.toArray(), cards: await db.cards.toArray(), settings: await db.settings.toArray() }
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
-  const a = Object.assign(document.createElement('a'), { href: url, download: `spendtrack-${data.exportedAt.slice(0, 10)}.json` })
+  const name = `spendtrack-${data.exportedAt.slice(0, 10)}.json`
+  const json = JSON.stringify(data, null, 2)
+  // En el APK no existen las descargas del navegador: se guarda el archivo y se abre "Compartir" de Android.
+  if (Capacitor.isNativePlatform()) {
+    const [{ Filesystem, Directory, Encoding }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')])
+    const { uri } = await Filesystem.writeFile({ path: name, data: json, directory: Directory.Cache, encoding: Encoding.UTF8 })
+    await Share.share({ title: 'Respaldo de SpendTrack', files: [uri] })
+    return
+  }
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }))
+  const a = Object.assign(document.createElement('a'), { href: url, download: name })
   a.click()
   URL.revokeObjectURL(url)
 }

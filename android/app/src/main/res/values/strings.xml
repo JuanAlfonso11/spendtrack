@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SpendTrack</string>
+    <string name="title_activity_main">SpendTrack</string>
+    <string name="package_name">com.spendtrack.app</string>
+    <string name="custom_url_scheme">com.spendtrack.app</string>
+</resources>

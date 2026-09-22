@@ -16,3 +16,8 @@
 - finance.ts + finance.test.ts: ciclos de corte, fecha límite, saldo al corte, disponibilidad, fondo de emergencia, proyección.
 - Bugs encontrados y corregidos: saldo manual marcado como vencido; "$$" perdido en ejes; KPIs desbordando a ~800px; archivos con CRLF.
 - Verificado en navegador (origen 127.0.0.1 aparte): tarjetas, importar estado de tarjeta, registrar pago, aviso de inversión, móvil claro/oscuro.
+
+## 2026-09-22 — Sesión 4 (APK)
+- Investigación GymMane (Flutter, Releases por ABI, workflow firmado con secrets) → findings.md §3.
+- Capacitor 8 + workflow Android. APK debug 6 MB OK (aapt2: com.spendtrack.app, web incluida). Release firmado verificado con apksigner.
+- Sin dispositivo ni emulador: el APK no se ha probado ejecutándose.

@@ -1,2 +1,7 @@
 node_modules
 dist
+# Firma del APK: nunca al repositorio
+*.jks
+*.keystore
+keystore.properties
+android/keystore.properties

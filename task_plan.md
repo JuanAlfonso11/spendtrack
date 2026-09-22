@@ -57,12 +57,25 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 - [x] Simulador de interés compuesto (invertido vs solo guardado, ingreso pasivo)
 - [x] Opciones comunes en RD, solo educativas, con aviso de no-asesoría (sin tasas inventadas)
 
+### Phase 7: APK en GitHub Releases
+**Status:** in_progress (falta: crear repo privado en GitHub, secrets de firma, primer tag)
+- [x] Capacitor 8 (com.spendtrack.app), íconos y splash generados
+- [x] Respaldo JSON con @capacitor/filesystem + share en el APK
+- [x] Gradle: firma desde android/keystore.properties; versión por -PversionName/-PversionCode
+- [x] Workflow .github/workflows/android.yml: main/PR = tests + APK debug (artifact); tag v* = APK firmado en Release
+- [x] README con instalación (descarga / Obtainium con token) y pasos de la clave de firma
+- [x] Verificado local: assembleDebug y assembleRelease firmado (clave temporal, borrada)
+- [ ] Repo privado en GitHub + push (usuario autentica)
+- [ ] Usuario crea keystore y 4 secrets; primer tag v0.1.0
+- [ ] Probar APK en un teléfono real (no había dispositivo/emulador conectado)
+- Decisión: repo PRIVADO
+
 ### Phase 4: Deploy
 **Status:** pending
 - [ ] Deploy a Vercel, instalar en el celular, prueba real 1 semana
 
 ## Next Step
-Probar con un estado de cuenta real del Popular (anonimizado) y ajustar parse.ts; luego deploy a Vercel.
+Crear el repo privado en GitHub y hacer push; luego keystore + secrets y tag v0.1.0.
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
