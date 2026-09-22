@@ -21,3 +21,5 @@
 - Investigación GymMane (Flutter, Releases por ABI, workflow firmado con secrets) → findings.md §3.
 - Capacitor 8 + workflow Android. APK debug 6 MB OK (aapt2: com.spendtrack.app, web incluida). Release firmado verificado con apksigner.
 - Sin dispositivo ni emulador: el APK no se ha probado ejecutándose.
+- Repo privado creado (JuanAlfonso11/spendtrack), rama main subida. Error: push rechazado sin scope `workflow` → `gh auth refresh -s workflow`.
+- Primer run de Actions OK (35795757595): pruebas + APK debug 5 MB como artifact.
