@@ -1,0 +1,10 @@
+{
+  "name": "SpendTrack",
+  "short_name": "SpendTrack",
+  "lang": "es",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F1EA",
+  "theme_color": "#2F5A3A",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
