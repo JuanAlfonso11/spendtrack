@@ -208,6 +208,8 @@ dialog.sheet::backdrop { background: rgb(20 22 18 / 0.45); }
 .amount-input { font: 400 40px var(--serif) !important; text-align: center; border: 0 !important; background: transparent !important; }
 .row { display: flex; gap: 10px; align-items: center; }
 .row > * { flex: 1; min-width: 0; }
+/* Los botones nunca se encogen por debajo de su texto: si no caben, bajan de línea. */
+.row > .btn { min-width: auto; }
 .spread { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 /* ---------- Importar ---------- */
