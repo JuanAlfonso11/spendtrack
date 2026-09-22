@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 
 const money = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 2 })
 export const fmt = (n: number) => money.format(n)
@@ -48,6 +49,7 @@ export function useTheme() {
   const resolved = pref === 'system' ? (systemDark ? 'dark' : 'light') : pref
   useEffect(() => {
     document.documentElement.dataset.theme = resolved
+    if (Capacitor.isNativePlatform()) SystemBars.setStyle({ style: resolved === 'dark' ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {})
     try { localStorage.setItem('theme', pref) } catch { /* modo privado */ }
   }, [pref, resolved])
   return { pref, setPref, resolved } as const
