@@ -58,7 +58,7 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 - [x] Opciones comunes en RD, solo educativas, con aviso de no-asesoría (sin tasas inventadas)
 
 ### Phase 7: APK en GitHub Releases
-**Status:** in_progress (falta: crear repo privado en GitHub, secrets de firma, primer tag)
+**Status:** in_progress (falta solo probar en un teléfono real)
 - [x] Capacitor 8 (com.spendtrack.app), íconos y splash generados
 - [x] Respaldo JSON con @capacitor/filesystem + share en el APK
 - [x] Gradle: firma desde android/keystore.properties; versión por -PversionName/-PversionCode
@@ -66,7 +66,7 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 - [x] README con instalación (descarga / Obtainium con token) y pasos de la clave de firma
 - [x] Verificado local: assembleDebug y assembleRelease firmado (clave temporal, borrada)
 - [x] Repo privado https://github.com/JuanAlfonso11/spendtrack + push (gh 2.101, scopes repo+workflow)
-- [ ] Usuario crea keystore y 4 secrets; primer tag v0.1.0
+- [x] Keystore del usuario + 4 secrets; v0.1.0 publicado: https://github.com/JuanAlfonso11/spendtrack/releases/tag/v0.1.0 (4.4 MB, firma CN=JAlavarado, SHA-256 f69fe8de…19476)
 - [ ] Probar APK en un teléfono real (no había dispositivo/emulador conectado)
 - Decisión: repo PRIVADO
 
@@ -75,7 +75,7 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 - [ ] Deploy a Vercel, instalar en el celular, prueba real 1 semana
 
 ## Next Step
-Usuario crea keystore y 4 secrets (README) y sube tag v0.1.0 → primer Release con APK firmado.
+Usuario instala v0.1.0 en su teléfono y reporta; luego estado de cuenta real del Popular para ajustar parse.ts.
 
 ## Errors Encountered
 | Error | Attempt | Resolution |

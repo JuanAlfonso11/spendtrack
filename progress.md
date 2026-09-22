@@ -23,3 +23,5 @@
 - Sin dispositivo ni emulador: el APK no se ha probado ejecutándose.
 - Repo privado creado (JuanAlfonso11/spendtrack), rama main subida. Error: push rechazado sin scope `workflow` → `gh auth refresh -s workflow`.
 - Primer run de Actions OK (35795757595): pruebas + APK debug 5 MB como artifact.
+- v0.1.0 publicado por Actions (run 35797414744): APK firmado 4.4 MB, minSdk 24 (Android 7+), versionCode 100. Firma verificada con apksigner.
+- Errores: gh en PowerShell de Administrador no ve la sesión; la sesión de gh de Claude (sandbox) no la ve la terminal del usuario; conexión a GitHub intermitente (timeouts).
