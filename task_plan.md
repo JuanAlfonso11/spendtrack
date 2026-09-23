@@ -67,7 +67,7 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 - [x] Verificado local: assembleDebug y assembleRelease firmado (clave temporal, borrada)
 - [x] Repo privado https://github.com/JuanAlfonso11/spendtrack + push (gh 2.101, scopes repo+workflow)
 - [x] Keystore del usuario + 4 secrets; v0.1.0 publicado: https://github.com/JuanAlfonso11/spendtrack/releases/tag/v0.1.0 (4.4 MB, firma CN=JAlavarado, SHA-256 f69fe8de…19476)
-- [ ] Probar APK en un teléfono real (no había dispositivo/emulador conectado)
+- [x] Probado en Galaxy S24 FE (SM-S721U, Android 16) con ARTEMIS + capturas adb: v0.1.1 y v0.1.2 corrigen barras del sistema, RD$, cifras cortadas, desbordes
 - Decisión: repo PRIVADO
 
 ### Phase 4: Deploy
@@ -78,6 +78,9 @@ Phase 4 — Deploy (Phases 1-3 hechas en diseño/MVP)
 Usuario instala v0.1.0 en su teléfono y reporta; luego estado de cuenta real del Popular para ajustar parse.ts.
 
 ## Errors Encountered
+| ARTEMIS Pro se cayó (Gemini 503/504, timeout 180 s) | 1 | Se usaron sus hallazgos + capturas propias por adb |
+| Botones encimados en pantalla vacía (regresión .row min-width:0) | 1 | .row > .btn { min-width: auto } |
+| WebView formatea DOP como "DOP 1,234" | 1 | fmt() arma "RD$" a mano |
 | Error | Attempt | Resolution |
 |---|---|---|
 | WebFetch nota de prensa popularenlinea.com vacía | 1 | Usé apiportal.popularenlinea.com directo |

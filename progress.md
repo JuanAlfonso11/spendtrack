@@ -25,3 +25,9 @@
 - Primer run de Actions OK (35795757595): pruebas + APK debug 5 MB como artifact.
 - v0.1.0 publicado por Actions (run 35797414744): APK firmado 4.4 MB, minSdk 24 (Android 7+), versionCode 100. Firma verificada con apksigner.
 - Errores: gh en PowerShell de Administrador no ve la sesión; la sesión de gh de Claude (sandbox) no la ve la terminal del usuario; conexión a GitHub intermitente (timeouts).
+
+## 2026-09-22 — Sesión 5 (prueba en teléfono)
+- ARTEMIS: entorno ready, Galaxy S24 FE R5CXC3D8SKW. Pro se cayó en el paso 3 por Gemini (503/504); alcanzó a reportar: título bajo la barra de estado, botones encimados en pantalla vacía.
+- Capturas propias por adb de todas las pestañas → más hallazgos: "DOP" en vez de RD$, contenido tras la hora al hacer scroll, cifras partidas, Importar desbordado, pestañas Ahorro cortadas, "·" parecía guion.
+- v0.1.1 (barras del sistema) y v0.1.2 (resto) publicadas por Actions e instaladas por adb con install -r (datos conservados). Verificado con capturas.
+- Pendiente para la próxima versión: meses de la gráfica sin saltarse (commit sin tag).

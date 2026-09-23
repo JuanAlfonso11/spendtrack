@@ -134,7 +134,7 @@ function CardDetail({ card, s, txs, onEdit, onPay, onImport }: {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={d.monthly} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap="32%">
               <CartesianGrid vertical={false} stroke={c.grid} />
-              <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: c.grid }} tick={{ fill: c.muted, fontSize: 12 }} />
+              <XAxis dataKey="label" interval={0} tickLine={false} axisLine={{ stroke: c.grid }} tick={{ fill: c.muted, fontSize: 11 }} tickFormatter={(l: string) => l.split(' ')[0]} />
               <YAxis tickFormatter={fmtShort} tickLine={false} axisLine={false} tick={{ fill: c.muted, fontSize: 12 }} width={64} />
               <Tooltip cursor={{ fill: c.grid, opacity: 0.5 }} content={({ active, payload }) => active && payload?.length ? (
                 <div className="tooltip"><div className="t-title">{monthLabel(payload[0].payload.month)}</div><div className="t-row"><span>Consumos</span><span className="num">{fmt(payload[0].payload.consumos)}</span></div></div>

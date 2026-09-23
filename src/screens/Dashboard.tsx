@@ -136,7 +136,7 @@ export default function Dashboard() {
                   onClick={(s) => { const i = Number(s?.activeIndex); if (!Number.isNaN(i) && d.monthly[i]) setMonth(d.monthly[i].month) }}
                   style={{ cursor: 'pointer' }}>
                   <CartesianGrid vertical={false} stroke={c.grid} />
-                  <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: c.grid }} tick={{ fill: c.muted, fontSize: 12 }} />
+                  <XAxis dataKey="label" interval={0} tickLine={false} axisLine={{ stroke: c.grid }} tick={{ fill: c.muted, fontSize: 11 }} tickFormatter={(l: string) => l.split(' ')[0]} />
                   <YAxis tickFormatter={fmtShort} tickLine={false} axisLine={false} tick={{ fill: c.muted, fontSize: 12 }} width={64} />
                   <Tooltip cursor={{ fill: c.grid, opacity: 0.5 }} content={<MonthTip />} />
                   {(['ingresos', 'gastos'] as const).map((k) => (
