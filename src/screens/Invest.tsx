@@ -123,7 +123,7 @@ function Simulator({ initial, monthly, settings, colors: c }: { initial: number;
           <span><span className="dash-key" style={{ borderColor: c.prev }} />Solo guardado</span>
         </div>
       </div>
-      <div className="row" style={{ flexWrap: 'wrap', marginBottom: 14 }}>
+      <div className="row" style={{ flexWrap: 'wrap', marginBottom: 14, alignItems: 'end' }}>
         <label className="field" style={{ flex: '1 1 140px' }}>Monto inicial (RD$)<input className="input num" inputMode="decimal" value={p.initial} onChange={set('initial')} /></label>
         <label className="field" style={{ flex: '1 1 140px' }}>Aporte mensual (RD$)<input className="input num" inputMode="decimal" value={p.monthly} onChange={set('monthly')} /></label>
         <label className="field" style={{ flex: '1 1 110px' }}>Rendimiento anual (%)<input className="input num" inputMode="decimal" value={p.rate} onChange={set('rate')} onBlur={() => saveSettings({ expectedRate: n(p.rate) })} /></label>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core'
 
-const money = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 2 })
-export const fmt = (n: number) => money.format(n)
+const num2 = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+export const fmt = (n: number) => (n < 0 ? '-' : '') + 'RD$' + num2.format(Math.abs(n))
 // Para ejes de gráficos: RD$12k, RD$1.5M (el formato compacto de es-DO mezcla "K" y "k").
 export const fmtShort = (n: number) =>
   (n < 0 ? '−' : '') + 'RD$' + (Math.abs(n) >= 1e6 ? `${+(Math.abs(n) / 1e6).toFixed(1)}M` : Math.abs(n) >= 1e3 ? `${+(Math.abs(n) / 1e3).toFixed(1)}k` : `${Math.round(Math.abs(n))}`)

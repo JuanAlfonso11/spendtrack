@@ -50,7 +50,7 @@ export default function Cards() {
           {cards.length > 1 && (
             <div className="chips" role="group" aria-label="Tarjeta">
               {cards.map((c) => (
-                <button key={c.id} className="chip" aria-pressed={selected.card.id === c.id} onClick={() => setSelectedId(c.id!)}>{c.name} ···{c.last4}</button>
+                <button key={c.id} className="chip" aria-pressed={selected.card.id === c.id} onClick={() => setSelectedId(c.id!)}>{c.name} ••{c.last4}</button>
               ))}
             </div>
           )}

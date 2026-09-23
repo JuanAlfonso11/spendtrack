@@ -12,7 +12,7 @@ export default function Movements() {
   const [q, setQ] = useState('')
   const [account, setAccount] = useState('todas')
   const cards = useLiveQuery(() => db.cards.toArray(), []) ?? []
-  const cardName = (id?: number) => { const c = cards.find((c: Card) => c.id === id); return c ? `${c.name} ···${c.last4}` : '' }
+  const cardName = (id?: number) => { const c = cards.find((c: Card) => c.id === id); return c ? `${c.name} ••${c.last4}` : '' }
   const [type, setType] = useState<'todos' | 'gasto' | 'ingreso'>('todos')
   const txs = useLiveQuery(() => db.txs.where('date').between(month + '-01', month + '-31', true, true).reverse().sortBy('date'), [month]) ?? []
 
@@ -40,10 +40,10 @@ export default function Movements() {
         <div className="row" style={{ flexWrap: 'wrap' }}>
           <input className="input" type="search" placeholder="Buscar por descripción" value={q} onChange={(e) => setQ(e.target.value)} style={{ flex: '1 1 220px' }} aria-label="Buscar" />
           {cards.length > 0 && (
-            <select className="input" style={{ flex: '0 1 200px' }} value={account} onChange={(e) => setAccount(e.target.value)} aria-label="Cuenta">
+            <select className="input" style={{ flex: '1 1 160px' }} value={account} onChange={(e) => setAccount(e.target.value)} aria-label="Cuenta">
               <option value="todas">Todas las cuentas</option>
               <option value="cuenta">Cuenta bancaria</option>
-              {cards.map((c) => <option key={c.id} value={c.id}>{c.name} ···{c.last4}</option>)}
+              {cards.map((c) => <option key={c.id} value={c.id}>{c.name} ••{c.last4}</option>)}
             </select>
           )}
           <div className="segmented" role="group" aria-label="Tipo" style={{ flex: 'none' }}>

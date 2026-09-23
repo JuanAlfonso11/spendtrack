@@ -90,7 +90,7 @@ export default function TxDialog({ initial, onClose }: { initial: Partial<Tx>; o
           <label className="field">{type === 'gasto' ? 'Pagado con' : 'Entró a'}
             <select className="input" value={account} onChange={(e) => setAccount(e.target.value)}>
               <option value="">Cuenta bancaria</option>
-              {cards.map((c) => <option key={c.id} value={c.id}>{c.name} ···{c.last4}</option>)}
+              {cards.map((c) => <option key={c.id} value={c.id}>{c.name} ••{c.last4}</option>)}
             </select>
           </label>
         )}

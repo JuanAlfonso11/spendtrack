@@ -9,7 +9,7 @@ export default function Savings() {
     <>
       <header className="topbar">
         <div><p className="eyebrow">Ahorro</p><h1>{tab === 'metas' ? 'Metas de ahorro' : 'Pon tu dinero a producir'}</h1></div>
-        <div className="row" style={{ flex: 'none' }}>
+        <div className="row topbar-actions">
           <div className="segmented" role="tablist" aria-label="Sección">
             <button role="tab" aria-pressed={tab === 'metas'} aria-selected={tab === 'metas'} onClick={() => setSub(null)}>Metas</button>
             <button role="tab" aria-pressed={tab === 'invertir'} aria-selected={tab === 'invertir'} onClick={() => setSub('invertir')}>Invertir</button>

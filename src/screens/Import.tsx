@@ -183,7 +183,7 @@ export default function Import() {
             <div className="card-head"><div><h2>¿De dónde es este estado de cuenta?</h2><p>{isCard ? 'En la tarjeta, los consumos suben la deuda y los pagos la bajan.' : 'Cuenta de ahorro o corriente.'}</p></div></div>
             <div className="chips" role="group" aria-label="Cuenta">
               <button className="chip" aria-pressed={!isCard} onClick={() => setAccount('')}>Cuenta bancaria</button>
-              {cards.map((c) => <button key={c.id} className="chip" aria-pressed={account === String(c.id)} onClick={() => setAccount(String(c.id))}>{c.name} ···{c.last4}</button>)}
+              {cards.map((c) => <button key={c.id} className="chip" aria-pressed={account === String(c.id)} onClick={() => setAccount(String(c.id))}>{c.name} ••{c.last4}</button>)}
               <button className="chip" onClick={() => go('tarjetas')}>+ Agregar tarjeta</button>
             </div>
           </section>

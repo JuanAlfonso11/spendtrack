@@ -97,7 +97,7 @@ export default function Dashboard() {
     <>
       <header className="topbar">
         <div><p className="eyebrow">Resumen</p><h1>{monthLabel(month)}</h1></div>
-        <div className="row" style={{ flex: 'none' }}><MonthSwitch compact /><ThemeButton /><SettingsButton /></div>
+        <div className="row topbar-actions"><MonthSwitch compact /><ThemeButton /><SettingsButton /></div>
       </header>
 
       {empty ? (
@@ -207,7 +207,7 @@ export default function Dashboard() {
               <div className="grid grid-2-even">
                 {alerts.cardList.map(({ card, s }) => (
                   <button key={card.id} className="catbar" onClick={() => go('tarjetas', card.id)}>
-                    <span className="name">{card.name} ···{card.last4}</span>
+                    <span className="name">{card.name} ••{card.last4}</span>
                     <span className="amt">{fmt(s.toPay)}</span>
                     <span className="track"><span className={`fill${s.utilization >= 0.7 ? ' over' : ''}`} style={{ width: `${Math.min(100, Math.max(0, s.utilization * 100))}%`, display: 'block' }} /></span>
                     <span className="pct">{Math.round(s.utilization * 100)}% del límite usado</span>
